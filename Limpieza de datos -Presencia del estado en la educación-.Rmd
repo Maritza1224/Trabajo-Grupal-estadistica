@@ -1,0 +1,120 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Luego de ver lso datos, se observa que la variable inversi?n en educaci?n tiene muchos casos perdidos. 
+Se busca otra data. 
+```{r}
+library(htmltab)
+ url1= "https://datosmacro.expansion.com/estado/gasto/educacion" 
+
+invereduc = htmltab(doc = url1, 
+               which ='//*[@id="node-10961"]/div[4]/div/div[2]',
+               encoding = "UTF-8") 
+```
+Eliminaremos las columnas que no necesitamos 
+```{r}
+invereduc=invereduc[ ,c(-2:-4)]
+invereduc=invereduc[ ,c(-4:-7)]
+invereduc=invereduc[,-2]
+
+```
+Ahora cambiaremos los nombres de nuestras columnas:
+```{r}
+names(invereduc)=c("Pais","gastoedu")
+```
+Ahora eliminamos los porcentajes y los m?s 
+```{r}
+invereduc$Pais =gsub("\\+", "", invereduc$Pais)
+invereduc$Pais =gsub("\\[]", "", invereduc$Pais)
+invereduc$gastoedu =gsub("\\%", "", invereduc$gastoedu)
+invereduc$gastoedu =gsub("\\,", ".", invereduc$gastoedu)
+#tambien cambiamos las comas por los puntos 
+invereduc$gastoedu =gsub("\\,", ".", invereduc$gastoedu)
+```
+
+Al juntar las datas nos damos cuentas que tenemos nombres repetidos, entonces cambairemos los nombres en una data y luego volveremos a juntar. 
+```{r}
+#reemplazamos las vocales con tilde por vocales sin tilde
+invereduc$Pais =gsub("í", "i", invereduc$Pais)
+invereduc$Pais =gsub("á", "a", invereduc$Pais)
+invereduc$Pais =gsub("é", "e", invereduc$Pais)
+invereduc$Pais =gsub("ó", "o", invereduc$Pais)
+invereduc$Pais =gsub("ú", "u", invereduc$Pais)
+```
+
+Verificamos nuestras variables 
+```{r}
+str(invereduc)
+#cambiamos nuestra variables a numericas
+invereduc$gastoedu=as.numeric(invereduc$gastoedu)
+#varificamos con un sumari 
+summary(invereduc)
+```
+
+
+```{r}
+link2="https://github.com/Maritza1224/Trabajo-Grupal-estadistica/raw/master/Bases%20originales/API_SE.SEC.ENRL.TC.ZS_DS2_es_excel_v2_1348815.xls"
+maestros=import(link2)
+
+```
+
+Eliminamos las columnas que no necesitamos 
+
+```{r}
+
+
+maestros= maestros[,-2:-54]
+
+```
+
+Eliminamos filas que no necesitamos
+```{r}
+maestros=maestros[-1:-2,]
+maestros=maestros[-1,]
+```
+Cambiamos de nombre a nuestros columnas:
+```{r}
+names(maestros) = c("pais", "2010","2011","2012", "2013","2014","2015", "2016","2017","2018", "2019")
+#eliminare la columna del 2019 ya que hay no encuentro datos 
+maestros$'2019'=NULL
+export(maestros,"maestrosxestu.xlsx")
+
+```
+En Excel juntamos los datos para tener elmas cercano, ahroa cambiamos nombres, borramos tildes y espacios en balnco 
+
+
+
+```{r}
+link3="https://github.com/Maritza1224/Trabajo-Grupal-estadistica/raw/master/Bases%20originales/maestroxestu1.xlsx?raw=true"
+maestroxestu=import(link3)
+```
+
+```{r}
+
+
+
+
+names(maestroxestu)=c("Pais","profxes")
+
+maestroxestu[!complete.cases(maestroxestu),]
+#reemplazamos las vocales con tilde por vocales sin tilde
+maestroxestu$Pais=gsub("Ã­", "i", maestroxestu$Pais)
+maestroxestu$Pais =gsub("Ã¡", "a", maestroxestu$Pais)
+maestroxestu$Pais =gsub("Ã©", "e", maestroxestu$Pais)
+maestroxestu$Pais =gsub("Ã³", "o", maestroxestu$Pais)
+maestroxestu$Pais =gsub("Ãº", "u", maestroxestu$Pais)
+maestroxestu$Pais =gsub("Ã", "A", maestroxestu$Pais)
+
+```
+```{r}
+invereduc$Pais=trimws(invereduc$Pais,whitespace = "[\\h\\v]")
+maestroxestu$Pais=trimws(maestroxestu$Pais,whitespace = "[\\h\\v]")
+```
+```{r}
+#juntamos la data de nuevo 
+data=merge(invereduc,maestroxestu,all.x = T, all.y = T)
+export(data,"estatalin11.xlsx")
+
+```
